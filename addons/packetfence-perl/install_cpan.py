@@ -8,6 +8,8 @@ import sys
 import os
 import shutil
 from itertools import islice
+from collections import deque
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -20,9 +22,26 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
+def tail_to_stdout(file_path, num_lines=15) -> str:
+    try:
+        with open(file_path, 'r') as file:
+            recent_lines = deque(file, num_lines)
+            for line in recent_lines:
+                print(line, end='')
+    except FileNotFoundError:
+        print("File not found")
 
-def manage_directory():
-    root_path = os.environ.get('OUTPUT_DIRECTORY', '/mnt/output')
+#convert csv file to o list of dictionary
+def convert_csv(csv_filename) -> list:
+    list_of_depdencies = list()
+    with open(csv_filename, 'r') as f:
+        for line in csv.reader(f):
+            if line != "":
+                list_of_depdencies.append(dict(zip(("a","b","c","d","e","f"), line)))
+    return list_of_depdencies
+
+
+def manage_directory(root_path):
     directory_path = root_path + "/debian/install_perl_logs"
     if os.path.exists(directory_path) and os.path.isdir(directory_path):
         # If it exists, remove the entire directory to clear all old logs
@@ -39,7 +58,7 @@ def manage_directory():
 
     return directory_path
 
-def convert_boolean(value):
+def convert_boolean(value) -> bool:
     default_value = True
     if value.strip().lower() in ['true', 'True']:
         default_value = True
@@ -66,7 +85,6 @@ def status_execution(process_ts, data_line):
     return return_code
 
 
-
 def install_perl_module(dict_data):
     file_name = f"logs_{dict_data['a']}.log"
     file_log = f"{logs_directory}/{file_name}"
@@ -84,9 +102,9 @@ def install_perl_module(dict_data):
     return result_status_execution, file_name
 
 
-def paralle_execution(list_execute):
-    with concurrent.futures.ThreadPoolExecutor(max_workers=number_exec) as executor:
-#    with concurrent.futures.ProcessPoolExecutor(max_workers=number_exec) as executor:
+def paralle_execution(list_execute,max_iteration):
+#    with concurrent.futures.ThreadPoolExecutor(max_workers=number_exec) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=number_exec) as executor:
         errors_install_perl = []
         list_module_perl_error = []
         # Start the load operations and mark each future with its URL
@@ -104,6 +122,9 @@ def paralle_execution(list_execute):
                 list_module_perl_error.append(url)
                 error_message = f"Error module installation: {url['a']} --> {url['c']}, more details please see the logs file: {log_file_name}, rc: {return_code} \n"
                 print(bcolors.WARNING + error_message + bcolors.ENDC)
+                #show last 15 lines for each error from log file
+                print(bcolors.FAIL + f"ERROR(oputput from log): " + bcolors.ENDC)
+                tail_to_stdout(f"{logs_directory}/{log_file_name}")
                 if url.get('retry_install')  is not None and url['retry_install'] >= 6:
                     errors_install_perl.append(error_message) 
                 
@@ -115,7 +136,6 @@ def paralle_execution(list_execute):
             sys.exit(bcolors.FAIL + errors + bcolors.ENDC)
         else:
             return list_module_perl_error
-
 
 
 def find_installed_perl_modules():
@@ -166,44 +186,50 @@ def validate_installed_perl_module(original_list_of_depdencies, installed_perl_m
             print(f"{data_csv['a']} {data_csv['b']} - {bcolors.OKGREEN}was installed correctly{bcolors.ENDC}")
     return list_module_perl_error_installed
 
-
-if __name__ == '__main__':
-    # construct the argument parse and parse the arguments
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--dependencies", required=True,  help="depedencies file's path")
-    parser.add_argument("-mw", "--max_workers", required=False, help="The number of Perl modules to be installed simultaneously, default is 30", default = 30)
-    args = parser.parse_args()
-
-    filename = args.dependencies
-    number_exec = args.max_workers
-    modules_without_version=("Net::Radius" "libwww::perl" "Module::Loaded")
-
-    list_of_depdencies = list()
-    with open(filename, 'r') as f:
-        for line in csv.reader(f):
-            list_of_depdencies.append(dict(zip(("a","b","c","d","e","f"), line)))
-
-    original_list_of_depdencies = list_of_depdencies
-
-    logs_directory = manage_directory()
-    
-    for i in range(1,7):
+def install_dependencies(list_of_depdencies, max_iteration=6):
+    for i in range(1,max_iteration+1):
         if len(list_of_depdencies) > 0:
             print(f"**************************{i} iteration instalation******************************")
-            list_of_depdencies = paralle_execution(list_of_depdencies)
+            list_of_depdencies = paralle_execution(list_of_depdencies,max_iteration)
 
-
-
+def validate_dependencies(original_list_of_depdencies,modules_without_version):
     print(f"**************************1 iteration validate******************************")
     installed_perl_modules = find_installed_perl_modules()
     ts = validate_installed_perl_module(original_list_of_depdencies, installed_perl_modules,modules_without_version)
     for i in range(2,7):
         if len(ts) > 0:
             print(f"**************************{i} iteration validate******************************")
-            paralle_execution(ts)
+#            paralle_execution(ts)
+            install_dependencies(ts,max_iteration=3)
             installed_perl_modules = find_installed_perl_modules()
             ts = validate_installed_perl_module(original_list_of_depdencies, installed_perl_modules,modules_without_version)
         else:
             break
         if i >= 6:
             sys.exit(bcolors.FAIL + "Validate perl modules failed, please see above errors" + bcolors.ENDC)
+
+if __name__ == '__main__':
+    # construct the argument parse and parse the arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-df", "--dependencies_csv_file", required=True,  help="depedencies file's path")
+    parser.add_argument("-mw", "--max_workers", required=False, help="The number of Perl modules to be installed simultaneously, default is 30", default = 30,type=int)
+    parser.add_argument("-vi", "--validate_perl_module", required=False, help="validate perl module", default = False, type= bool)
+    
+    args = parser.parse_args()
+    csv_filename = args.dependencies_csv_file
+    number_exec = args.max_workers
+    validate_perl_module = args.validate_perl_module
+
+    modules_without_version=("Net::Radius" "libwww::perl" "Module::Loaded")
+    list_of_depdencies = convert_csv(csv_filename)
+    original_list_of_depdencies = list_of_depdencies
+    logs_directory = manage_directory(os.environ.get('OUTPUT_DIRECTORY', '/mnt/output'))
+    
+    if validate_perl_module: 
+        validate_dependencies(original_list_of_depdencies,modules_without_version)
+    else:
+        install_dependencies(list_of_depdencies)
+        validate_dependencies(original_list_of_depdencies,modules_without_version)
+
+
+
