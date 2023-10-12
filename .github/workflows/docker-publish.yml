@@ -45,6 +45,6 @@ jobs:
           context: './addons/packetfence-perl'
           push: true
           tags: |
-            packetfence-perl-debian:v1.21
-            packetfence-perl-debian:latest
+            packetfence/packetfence-perl-debian:v1.21
+            packetfence/packetfence-perl-debian:latest
           file: ./addons/packetfence-perl/Dockerfile-debian
