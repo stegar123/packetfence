@@ -94,6 +94,8 @@ jobs:
         run: |
           pwd
           ls -ltr ./
+          ls -ltr /root
+          ls -ltr /usr/local/pf/lib/perl_modules/lib/perl5/
           env
           python3 install_cpan.py -d dependencies.csv -vi true 
           ./make_tar_from_source.sh
