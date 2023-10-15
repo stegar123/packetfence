@@ -72,6 +72,11 @@ jobs:
           docker image ls
 
   build_debian_package:
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
     needs: build_image
     runs-on: test-igor
     container:
