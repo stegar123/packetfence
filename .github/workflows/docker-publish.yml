@@ -51,16 +51,16 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: './addons/packetfence-perl'
-          push: true
+          push: false
 #          load: true
           tags: |
-            localhost:5000/packetfence/packetfence-perl-debian:v1.21
-            localhost:5000/packetfence/packetfence-perl-debian:latest
+            packetfence/packetfence-perl-debian:v1.21
+            packetfence/packetfence-perl-debian:latest
           file: ./addons/packetfence-perl/Dockerfile-debian
 
-      - name: Inspect
-        run: |
-          docker buildx imagetools inspect localhost:5000/packetfence/packetfence-perl-debian:latest
+      # - name: Inspect
+      #   run: |
+      #     docker buildx imagetools inspect localhost:5000/packetfence/packetfence-perl-debian:latest
       
       - name: bash-version-ls-la-first
         run: |
@@ -74,10 +74,12 @@ jobs:
       - name: build debian package
         uses: addnab/docker-run-action@v3
         with:
-            image: localhost:5000/packetfence/packetfence-perl-debian:latest
+#            image: localhost:5000/packetfence/packetfence-perl-debian:latest
+            image: packetfence/packetfence-perl-debian:latest
             options: -v ${{ github.workspace }}/addons/packetfence-perl/:/root -v /mnt/:/mnt/output
             run: |
                 python3 install_cpan.py -d dependencies.csv -vi true
+                echo "build debian package"
                 ./make_tar_from_source.sh
 
       - name: check if the package is created
