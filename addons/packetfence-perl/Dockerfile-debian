@@ -58,3 +58,5 @@ RUN python3 -u  install_cpan.py  -d dependencies.csv -mw 20
 
 #remove logs
 RUN rm -rf $HOME/.cpan/build/*
+
+CMD [ "/bin/bash" ]
