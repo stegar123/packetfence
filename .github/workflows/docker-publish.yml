@@ -126,8 +126,8 @@ jobs:
     runs-on: test-igor
     container:
       image: ubuntu:20.04
-      env:
-        NODE_ENV: development
+#      env:
+#        NODE_ENV: development
       volumes:
         - /mnt/debian/packages/:/mnt
 #      options: --cpus 1
@@ -135,15 +135,39 @@ jobs:
       - name: Check for dockerenv file
         run: (ls /.dockerenv && echo Found dockerenv) || (echo No dockerenv)
       
-      - name: sadfasdfsd 
+      - name: install the package
         run: |
           cat /etc/*release
           env
           ls -la /mnt
-          dpkg -i /mnt/packetfence-perl_1.2.1_all.deb
+          dpkg -i /mnt/*.deb
 
-  push_image: 
+  sign_package:
     needs: ['build_image', 'unit-test']
+    runs-on: test-igor
+    container:
+      image: debian:11.0
+#      env:
+#        NODE_ENV: development
+      volumes:
+        - /mnt/debian/packages/:/mnt
+#      options: --cpus 1
+    steps:
+      - name: Install debian dependenecies
+        run:  apt update && apt install gpg dpkg-sig -y
+
+      - name: import private key
+        run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --pinentry-mode loopback --import
+
+      - name: Sign the package
+        run: dpkg-sig -k  B022C48D3D6373D7FC256A8CCB2D3A2AA0030E2C  --sign builder /mnt/*.deb
+
+      - name: Verifiy the signarure of package
+        run: gpg --verify  /mnt/*.deb
+
+
+  push_docker-image_and_deb-package: 
+    needs: ['build_image', 'unit-test', 'sign_package']
     runs-on: test-igor
 
     steps:
