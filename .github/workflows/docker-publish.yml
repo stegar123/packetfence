@@ -9,7 +9,7 @@ jobs:
   build_image:
 #  build:
 
-    runs-on: test-igor
+    runs-on: test-igor2
     # services:
     #   registry:
     #     image: registry:2
@@ -62,10 +62,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Inspect
-        run: |
-          docker buildx imagetools inspect localhost:5000/packetfence/packetfence-perl-debian:latest
-      
       - name: bash-version-ls-la-first
         run: |
           echo "::add-mask::asdfsadf"
@@ -123,7 +119,7 @@ jobs:
 
   unit-test:
     needs: ['build_image']
-    runs-on: test-igor
+    runs-on: test-igor2
     container:
       image: ubuntu:20.04
 #      env:
@@ -144,7 +140,7 @@ jobs:
 
   sign_package:
     needs: ['build_image', 'unit-test']
-    runs-on: test-igor
+    runs-on: test-igor2
     container:
       image: debian:11.0
 #      env:
@@ -168,7 +164,7 @@ jobs:
 
   push_docker-image_and_deb-package: 
     needs: ['build_image', 'unit-test', 'sign_package']
-    runs-on: test-igor
+    runs-on: test-igor2
 
     steps:
     - name: Set up Docker Buildx
@@ -187,3 +183,7 @@ jobs:
         file: ./addons/packetfence-perl/Dockerfile-debian
         cache-from: type=gha
 #        cache-to: type=gha,mode=max
+
+    - name: Inspect
+      run: |
+        docker buildx imagetools inspect localhost:5000/packetfence/packetfence-perl-debian:latest
