@@ -56,11 +56,15 @@ jobs:
           tags: |
             packetfence/packetfence-perl-debian:v1.21
             packetfence/packetfence-perl-debian:latest
+            localhost:5000/packetfence/packetfence-perl-debian:latest
+            localhost:5000/packetfence/packetfence-perl-debian:v1.21
           file: ./addons/packetfence-perl/Dockerfile-debian
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
-      # - name: Inspect
-      #   run: |
-      #     docker buildx imagetools inspect localhost:5000/packetfence/packetfence-perl-debian:latest
+      - name: Inspect
+        run: |
+          docker buildx imagetools inspect localhost:5000/packetfence/packetfence-perl-debian:latest
       
       - name: bash-version-ls-la-first
         run: |
@@ -137,3 +141,17 @@ jobs:
           env
           ls -la /mnt
           dpkg -i /mnt/packetfence-perl_1.2.1_all.deb
+
+  push_image: 
+    needs: ['build_image', 'unit-test']
+    runs-on: test-igor
+    steps:
+    - name: Build and push
+      uses: docker/build-push-action@v5
+      with:
+        context: './addons/packetfence-perl'
+        push: true
+        tags: |
+          localhost:5000/packetfence/packetfence-perl-debian:latest
+          localhost:5000/packetfence/packetfence-perl-debian:v1.21
+        file: ./addons/packetfence-perl/Dockerfile-debian
