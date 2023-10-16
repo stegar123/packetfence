@@ -76,7 +76,7 @@ jobs:
         with:
 #            image: localhost:5000/packetfence/packetfence-perl-debian:latest
             image: packetfence/packetfence-perl-debian:latest
-            options: -v ${{ github.workspace }}/addons/packetfence-perl/:/root -v /mnt/:/mnt/output
+            options: --rm -v ${{ github.workspace }}/addons/packetfence-perl/:/root -v /mnt/:/mnt/output
             shell: /bin/bash
             run: |
                 set -e && python3 install_cpan.py -d dependencies.csv -vi true && 
@@ -134,5 +134,6 @@ jobs:
       - name: sadfasdfsd 
         run: |
           cat /etc/*release
+          env
           ls -la /mnt
           dpkg -i /mnt/packetfence-perl_1.2.1_all.deb
