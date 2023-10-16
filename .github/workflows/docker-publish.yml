@@ -77,9 +77,10 @@ jobs:
 #            image: localhost:5000/packetfence/packetfence-perl-debian:latest
             image: packetfence/packetfence-perl-debian:latest
             options: -v ${{ github.workspace }}/addons/packetfence-perl/:/root -v /mnt/:/mnt/output
+            shell: bash
             run: |
-                python3 install_cpan.py -d dependencies.csv -vi true
-                echo "build debian package"
+                set -e && python3 install_cpan.py -d dependencies.csv -vi true && 
+                echo "build debian package" && 
                 ./make_tar_from_source.sh
 
       - name: check if the package is created
@@ -117,22 +118,22 @@ jobs:
           
 
 
-#   unit-test:
-# #    runs-on: nested-${{ github.run_id }}
-#     needs: ['build_image','build_debian_package']
-#     runs-on: test-igor
-#     container:
-#       image: ubuntu:22.04
-#       env:
-#         NODE_ENV: development
-#       volumes:
-#         - /tmp/debian/packages/:/mnt
-#       options: --cpus 1
-#     steps:
-#       - name: Check for dockerenv file
-#         run: (ls /.dockerenv && echo Found dockerenv) || (echo No dockerenv)
+  unit-test:
+    needs: ['build_image']
+    runs-on: test-igor
+    container:
+      image: ubuntu:20.04
+      env:
+        NODE_ENV: development
+      volumes:
+        - /mnt/debian/packages/:/mnt
+#      options: --cpus 1
+    steps:
+      - name: Check for dockerenv file
+        run: (ls /.dockerenv && echo Found dockerenv) || (echo No dockerenv)
       
-#       - name: sadfasdfsd 
-#         run: |
-#           ls -la /mnt
-#           dpkg -i /mnt/packetfence-perl_1.2.1_all.deb
+      - name: sadfasdfsd 
+        run: |
+          cat /etc/*release
+          ls -la /mnt
+          dpkg -i /mnt/packetfence-perl_1.2.1_all.deb
