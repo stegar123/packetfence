@@ -52,7 +52,7 @@ jobs:
         with:
           context: './addons/packetfence-perl'
           push: false
-#          load: true
+          load: true
           tags: |
             packetfence/packetfence-perl-debian:v1.21
             packetfence/packetfence-perl-debian:latest
@@ -77,10 +77,9 @@ jobs:
 #            image: localhost:5000/packetfence/packetfence-perl-debian:latest
             image: packetfence/packetfence-perl-debian:latest
             options: -v ${{ github.workspace }}/addons/packetfence-perl/:/root -v /mnt/:/mnt/output
-            shell: bash
+            shell: /bin/bash
             run: |
                 set -e && python3 install_cpan.py -d dependencies.csv -vi true && 
-                echo "build debian package" && 
                 ./make_tar_from_source.sh
 
       - name: check if the package is created
