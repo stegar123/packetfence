@@ -1,0 +1,101 @@
+- name: Restart packetfence config
+  ansible.builtin.uri:
+    url: "{{pfserver_webadmin_url}}/api/v1/configurator/system_service/packetfence-config/restart"
+    method: POST
+    status_code: [202, 200]
+    validate_certs: False
+    return_content: yes
+    body_format: json
+    headers:
+      "Content-Type": "application/json"
+    body: >-
+      {
+        "async": true
+      }
+  register: result_pf_config_restart
+  until: result_pf_config_restart.status == 202 or result_pf_config_restart.status == 200
+  ignore_errors: true
+  retries: 5
+  delay: 10
+
+- include_tasks: status_job_running.yml
+  vars: 
+    task_id: "{{ result_pf_config_restart.json.task_id }}"
+
+- name: restart pf config services
+  ansible.builtin.systemd:
+    name: packetfence-config
+    state: restarted
+
+- name: Update systemd
+  ansible.builtin.uri:
+    url: "{{pfserver_webadmin_url}}/api/v1/configurator/service/pf/update_systemd"
+    method: POST
+    status_code: [202, 200]
+    validate_certs: False
+    return_content: yes
+    headers:
+      "Content-Type": "application/json"
+    body: >-
+      {
+        "async": true
+      }
+  register: result_pf_update_systemd
+  until: result_pf_update_systemd.status == 202 or result_pf_update_systemd.status == 200
+  ignore_errors: yes
+  retries: 5
+  delay: 10
+
+- include_tasks: status_job_running.yml
+  vars: 
+    task_id: "{{ result_pf_update_systemd.json.task_id }}"
+
+- name: Haproxy restart
+  ansible.builtin.uri:
+    url: "https://172.17.0.3:1443/api/v1/configurator/service/haproxy-admin/restart"
+    method: POST
+    status_code: [202, 200]
+    validate_certs: False
+    headers:
+      "Content-Type": "application/json"
+    body: >-
+      {
+        "async": true
+      }
+  register: result_pf_haproxy_restart
+  until: result_pf_haproxy_restart.status == 202 or result_pf_haproxy_restart.status == 200
+  ignore_errors: yes
+  retries: 5
+  delay: 10
+
+- include_tasks: status_job_running.yml
+  vars: 
+    task_id: "{{ result_pf_haproxy_restart.json.task_id }}"
+
+- name: restart pf perl services
+  ansible.builtin.systemd:
+    name: packetfence-pfperl-api
+    state: restarted
+
+- name: Packetfence start
+  ansible.builtin.uri:
+    url: "{{pfserver_webadmin_url}}/api/v1/configurator/service/pf/start"
+    method: POST
+    status_code: [202, 200]
+    validate_certs: False
+    return_content: yes
+    headers:
+      "Content-Type": "application/json"
+    body: >-
+      {
+        "async": true
+      }
+  register: result_pf_start
+  until: result_pf_start.status == 202 or result_pf_start.status == 200
+  ignore_errors: yes
+  retries: 5
+  delay: 10 
+
+- include_tasks: status_job_running.yml
+  vars: 
+    task_id: "{{ result_pf_start.json.task_id }}"
