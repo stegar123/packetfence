@@ -1,0 +1,54 @@
+- name: Restart packetfence config
+  ansible.builtin.uri:
+    url: "{{pfserver_webadmin_url}}/api/v1/configurator/system_service/packetfence-config/restart"
+    method: POST
+    status_code: [202, 200]
+    validate_certs: False
+    return_content: yes
+    timeout: 600
+  register: result
+  until: result.status == 202 or result.status == 200
+  ignore_errors: yes
+  retries: 5
+  delay: 10
+
+- name: Update systemd
+  ansible.builtin.uri:
+    url: "{{pfserver_webadmin_url}}/api/v1/configurator/service/pf/update_systemd"
+    method: POST
+    status_code: [202, 200]
+    validate_certs: False
+    timeout: 600
+    return_content: yes
+  register: result
+  until: result.status == 202 or result.status == 200
+  ignore_errors: yes
+  retries: 5
+  delay: 10
+
+- name: Haproxy restart
+  ansible.builtin.uri:
+    url: "https://172.17.0.3:1443/api/v1/configurator/system_service/packetfence-config/restart"
+    method: POST
+    status_code: [202, 200]
+    validate_certs: False
+    timeout: 600
+  register: result
+  until: result.status == 202 or result.status == 200
+  ignore_errors: yes
+  retries: 7
+  delay: 10 
+
+- name: Packetfence start
+  ansible.builtin.uri:
+    url: "{{pfserver_webadmin_url}}/api/v1/configurator/service/pf/start"
+    method: POST
+    status_code: [202, 200]
+    validate_certs: False
+    return_content: yes
+    timeout: 600
+  register: result
+  until: result.status == 202 or result.status == 200
+  ignore_errors: yes
+  retries: 5
+  delay: 10 
