@@ -1,3 +1,27 @@
+- name: Start maria db server
+  ansible.builtin.uri:
+    url: "{{pfserver_webadmin_url}}/api/v1/configurator/system_service/packetfence-mariadb/start"
+    method: POST
+    status_code: 202
+    validate_certs: False
+    return_content: yes
+    headers:
+      "Content-Type": "application/json"
+    body: >-
+      {
+        "async": true
+      }
+  register: result_pf_mysql_start
+  until: result_pf_mysql_start.status == 202
+  ignore_errors: yes
+  retries: 5
+  delay: 10
+#  when: result_mariadb_status.content is defined and "Service is not running" in result_mariadb_status.content
+
+- include_tasks: status_job_running.yml
+  vars: 
+    task_id: "{{ result_pf_mysql_start.json.task_id }}"
+
 - name:  Status maria db server
   ansible.builtin.uri:
     url: "{{pfserver_webadmin_url}}/api/v1/configurator/system_service/packetfence-mariadb/status"
@@ -6,24 +30,49 @@
     validate_certs: False
     return_content: yes
   register: result_mariadb_status
-  until: result_mariadb_status.status in [200, 500]
+  until: result_mariadb_status.status in [200] and "Service is running" in result_mariadb_status.json.message
+  retries: 5
+  delay: 10
+
+- name: Start config server
+  ansible.builtin.uri:
+    url: "{{pfserver_webadmin_url}}/api/v1/configurator/service/tracking-config/start"
+    method: POST
+    status_code: 202
+    validate_certs: False
+    return_content: yes
+    headers:
+      "Content-Type": "application/json"
+    body: >-
+      {
+        "async": true
+      }
+  register: result_pf_config_server
+  until: result_pf_config_server.status == 202
+  ignore_errors: yes
+  retries: 5
+  delay: 10
+#  when: result_mariadb_status.content is defined and "Service is not running" in result_mariadb_status.content
+
+- include_tasks: status_job_running.yml
+  vars: 
+    task_id: "{{ result_pf_config_server.json.task_id }}"
+
+
+- name:  Status tracking config server
+  ansible.builtin.uri:
+    url: "{{pfserver_webadmin_url}}/api/v1/configurator/service/tracking-config/status"
+    method: GET
+    status_code: 200
+    validate_certs: False
+    return_content: yes
+  register: result_tracking_config
+#  until: result_tracking_config.status in [200] and "Service is running" in result_tracking_config.json.message
+  until: result_tracking_config.status in [200]
   ignore_errors: yes
   retries: 5
   delay: 10
 
-- name: Start maria db server
-  ansible.builtin.uri:
-    url: "{{pfserver_webadmin_url}}/api/v1/configurator/system_service/packetfence-mariadb/start"
-    method: POST
-    status_code: 200
-    validate_certs: False
-    return_content: yes
-  register: result
-  until: result.status == 200
-  ignore_errors: yes
-  retries: 5
-  delay: 10
-  when: result_mariadb_status.content is defined and "Service is not running" in result_mariadb_status.content
 
 - name: configure root user mariadb, secure installation
   ansible.builtin.uri:
@@ -92,8 +141,8 @@
         "db": "{{mariadb.databasename}}",
         "id": "database",
         "root_pass": "{{mariadb.rootpassword}}",
-        "pass": "{{mariadb.pfuser}}",
-        "user": "{{mariadb.pfpassword}}"
+        "user": "{{mariadb.pfuser}}",
+        "pass": "{{mariadb.pfpassword}}"
       }
   register: result
 
@@ -151,6 +200,31 @@
       }
   register: result
 
+- name: set_admin_account_password
+  ansible.builtin.uri:
+    url: "{{pfserver_webadmin_url}}/api/v1/configurator/user/admin/password"
+#    url: "https://172.105.9.169:1443/api/v1/configurator/user/admin/password"
+    method: PATCH
+    status_code: [200, 202]
+    validate_certs: False
+    body_format: json
+    timeout: 600
+    headers:
+      "Content-Type": "application/json"
+    body: >-
+      {
+        "password": "{{ admin.password }}",
+        "pid": "admin"
+      }
+  register: result_admin_password
+  until: result_admin_password.status == 200 or result_admin_password == 202
+  retries: 10
+  delay: 10
+  ignore_errors: True
+  
+- debug:
+    var: result_admin_password
+
 - name: restart database
   ansible.builtin.uri:
     url: "{{pfserver_webadmin_url}}/api/v1/configurator/system_service/packetfence-mariadb/restart"
@@ -172,28 +246,3 @@
 - include_tasks: status_job_running.yml
   vars: 
     task_id: "{{ result_pf_restart_database.json.task_id }}"
-
-- name: set_admin_account_password
-  ansible.builtin.uri:
-    url: "{{pfserver_webadmin_url}}/api/v1/configurator/user/admin/password"
-#    url: "https://172.105.9.169:1443/api/v1/configurator/user/admin/password"
-    method: PATCH
-    status_code: 200
-    validate_certs: False
-    body_format: json
-    headers:
-      "Content-Type": "application/json"
-    body: >-
-      {
-        "quiet":true,
-        "password": "{{ admin.password }}",
-        "pid": "admin"
-      }
-  register: result
-  until: result.status == 200
-  retries: 10
-  delay: 10
-  ignore_errors: True
-  
-- debug:
-    var: result
