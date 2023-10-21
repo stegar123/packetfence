@@ -52,7 +52,7 @@
 
 - name: Haproxy restart
   ansible.builtin.uri:
-    url: "https://172.17.0.3:1443/api/v1/configurator/service/haproxy-admin/restart"
+    url: "{{pfserver_webadmin_url}}/api/v1/configurator/service/haproxy-admin/restart"
     method: POST
     status_code: [202, 200]
     validate_certs: False
@@ -99,3 +99,65 @@
 - include_tasks: status_job_running.yml
   vars: 
     task_id: "{{ result_pf_start.json.task_id }}"
+
+- name: Status packet fence
+  ansible.builtin.uri:
+    url: "{{pfserver_webadmin_url}}/api/v1/configurator/service/pf/status"
+    method: GET
+    status_code: 200
+    validate_certs: False
+    return_content: yes
+  register: result_pf_status
+#  until: result_pf_status.status in [200] and "Service is running" in result_pf_status.json.message
+  ignore_errors: yes
+#  retries: 5
+#  delay: 10
+
+- name: config database
+  ansible.builtin.uri:
+    url: "{{pfserver_webadmin_url}}/api/v1/configurator/config/base/advanced"
+    method: PATCH
+    status_code: 200
+    body_format: json
+    validate_certs: False
+    headers:
+      "Content-Type": "application/json"
+    body: >-
+      {
+      "accounting_timebucket_size":{"interval":"5","unit":"m"},
+      "active_directory_os_join_check_bypass":"disabled",
+      "admin_csp_security_headers":"disabled",
+      "api_inactivity_timeout":{"interval":"15","unit":"m"},
+      "api_max_expiration":{"interval":"12","unit":"h"},
+      "configurator":"disabled",
+      "disable_pf_domain_auth":"disabled",
+      "hash_passwords":"bcrypt",
+      "hashing_cost":null,
+      "id":"advanced",
+      "language":"en_US",
+      "ldap_attributes":null,
+      "locationlog_close_on_accounting_stop":"enabled",
+      "multihost":"disabled",
+      "netflow_on_all_networks":"disabled",
+      "not_deletable":true,
+      "not_sortable":true,
+      "openid_attributes":[],
+      "pffilter_processes":null,
+      "pfperl_api_processes":null,
+      "pfperl_api_timeout":null,
+      "pfupdate_custom_script_path":null,
+      "portal_csp_security_headers":"enabled",
+      "scan_on_accounting":"disabled",
+      "source_to_send_sms_when_creating_users":null,
+      "sso_on_access_reevaluation":"disabled",
+      "sso_on_accounting":"disabled",
+      "sso_on_dhcp":"enabled",
+      "statsd_listen_host":"[% ENV.env_or_default(\"STATSD_LISTEN_HOST\", \"127.0.0.1\") %]",
+      "statsd_listen_port":"[% ENV.env_or_default(\"STATSD_LISTEN_PORT\", \"8125\") %]",
+      "timing_stats_level":null,
+      "update_iplog_with_accounting":"disabled",
+      "update_iplog_with_external_portal_requests":"enabled",
+      "zero_trust_network_netmask":null,
+      "zero_trust_network_starting_ip":null
+      }
+  register: result
