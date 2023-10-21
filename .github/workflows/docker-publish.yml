@@ -145,8 +145,6 @@ jobs:
           tags: |
             packetfence/packetfence-perl-debian-smoke-test:latest
           file: ./addons/packetfence-perl/Dockerfile_smoket_debian
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
 
       - name: Install packetfence
@@ -154,8 +152,8 @@ jobs:
         with:
 #            image: localhost:5000/packetfence/packetfence-perl-debian:latest
             image: packetfence/packetfence-perl-debian-smoke-test:latest
-            options: -d -rm -v ${{ github.workspace }}/addons/packetfence-perl/:/root --privileged -p 80:80 -p 443:443 -p 1443:1443 -v /dev:/dev 
-#            shell: /bin/bash
+            options: -d --rm -v ${{ github.workspace }}/addons/packetfence-perl/:/root --privileged -p 80:80 -p 443:443 -p 1443:1443 -v /dev:/dev 
+            shell: /sbin/init
             run: |
                 apt install packetfence -y && \
                 ansible-playbook ansible-configurator/main.yml
