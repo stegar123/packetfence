@@ -154,8 +154,8 @@ jobs:
         with:
 #            image: localhost:5000/packetfence/packetfence-perl-debian:latest
             image: packetfence/packetfence-perl-debian-smoke-test:latest
-            options: --rm -v ${{ github.workspace }}/addons/packetfence-perl/:/root --privileged -p 80:80 -p 443:443 -p 1443:1443 -v /dev:/dev 
-            shell: /bin/bash
+            options: -it  -d -rm -v ${{ github.workspace }}/addons/packetfence-perl/:/root --privileged -p 80:80 -p 443:443 -p 1443:1443 -v /dev:/dev 
+#            shell: /bin/bash
             run: |
                 apt install packetfence -y && \
                 ansible-playbook ansible-configurator/main.yml
