@@ -24,6 +24,6 @@ EXPOSE 80 1443 443
 
 #RUN printf "systemctl start systemd-logind" >> /etc/profile
 
-#ENTRYPOINT ["/sbin/init", "&"]
+CMD ["/sbin/init"]
 #ENTRYPOINT ["/usr/sbin/init", "&"]
 
