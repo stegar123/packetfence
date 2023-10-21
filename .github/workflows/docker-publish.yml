@@ -128,12 +128,15 @@ jobs:
       id-token: write
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3    
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
           driver-opts: network=host
 
-      - name: Build debian smoke
+      - name: Build debian smoke docker image
         uses: docker/build-push-action@v5
         with:
           context: './addons/packetfence-perl'
@@ -143,16 +146,7 @@ jobs:
             packetfence/packetfence-perl-debian-smoke-test:latest
           file: ./addons/packetfence-perl/Dockerfile_smoket_debian
 
-      - name: bash-version-ls-la-first
-        run: |
-          echo "::add-mask::asdfsadf"
-          ls -ltr /
-          pwd
-          ls -ltr ./
-          env
-          docker image ls
-
-      - name: build debian package
+      - name: Install packetfence
         uses: addnab/docker-run-action@v3
         with:
 #            image: localhost:5000/packetfence/packetfence-perl-debian:latest
@@ -160,9 +154,9 @@ jobs:
             options: --rm -v ${{ github.workspace }}/addons/packetfence-perl/:/root --privileged -p 80:80 -p 443:443 -p 1443:1443 -v /dev:/dev 
             shell: /bin/bash
             run: |
-                /sbin/init &
-                apt install packetfence -y
-                ansible-plabook ansible-configurator/main.yml
+                nohup sh -c /sbin/init &
+                apt install packetfence -y && \
+                ansible-playbook ansible-configurator/main.yml
 
 
   unit-test:
