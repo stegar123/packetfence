@@ -146,17 +146,12 @@ jobs:
             packetfence/packetfence-perl-debian-smoke-test:latest
           file: ./addons/packetfence-perl/Dockerfile_smoket_debian
 
+      - name: Install packetfence 
+        run: |
+            docker run -i -d --privileged -v /dev/:/dev/ -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host -p 1443:1443 -v ${{ github.workspace }}/addons/packetfence-perl/:/root --name  packetfence-perl-debian-smoke-test packetfence/packetfence-perl-debian-smoke-test:latest
+            docker exec -i packetfence-perl-debian-smoke-test apt install packetfence -y
+            docker exec -i packetfence-perl-debian-smoke-test ansible-playbook ansible-configurator/main.yml
 
-      - name: Install packetfence
-        uses: addnab/docker-run-action@v3
-        with:
-#            image: localhost:5000/packetfence/packetfence-perl-debian:latest
-            image: packetfence/packetfence-perl-debian-smoke-test:latest
-            options: -d --rm -v ${{ github.workspace }}/addons/packetfence-perl/:/root --privileged -p 80:80 -p 443:443 -p 1443:1443 -v /dev:/dev 
-            shell: /sbin/init
-            run: |
-                apt install packetfence -y && \
-                ansible-playbook ansible-configurator/main.yml
 
 
   unit-test:
