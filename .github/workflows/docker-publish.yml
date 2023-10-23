@@ -131,7 +131,7 @@ jobs:
 
       - name: Copy smoke scipts in the right directory
         run: |
-            docker exec -i "${{ env.container_name }}" cp -a /root/packetfence/t/* /usr/local/pf/t/
+            docker exec -i "${{ env.container_name }}" cp -a /root/packetfence/t/. /usr/local/pf/t/
 
 #      - name: Post clean docker envrionement
 #        if: always()
