@@ -1,6 +1,8 @@
 FROM debian:11
 
-ENV workdir=/root \
+ARG workdir
+
+ENV WORKDIR=${workdir} \
     OUTPUT_DIRECTORY="/mnt/output" \
     BASE_DIR=/usr/local/pf/lib/perl_modules
 
@@ -10,7 +12,7 @@ ENV PERL5LIB=/root/perl5/lib/perl5:${BASE_DIR}/lib/perl5/ \
     CPAN_BIN_PATH="/usr/bin/cpan" \
     CPAN_VERSION=2.36
 
-WORKDIR ${workdir}
+WORKDIR ${WORKDIR}
 
 RUN  apt update -y && \
     apt install libmodule-signature-perl zip make build-essential \ 
@@ -24,7 +26,7 @@ libnet-ssleay-perl libcpan-perl-releases-perl python3 vim -y && \
 
 #RUN TestPerlConfig=$(perl -e exit); [[ ${TestPerlConfig} != "" ]] && export LC_CTYPE=en_US.UTF-8;  export LC_ALL=en_US.UTF-8
 
-RUN mkdir -p ${workdir}/debian && \
+RUN mkdir -p ${WORKDIR}/debian && \
     mkdir -p ${BASE_DIR}/lib/perl5/ \
     mkdir -p ${OUTPUT_DIRECTORY}
 
@@ -50,7 +52,7 @@ RUN (echo o conf make_install_arg 'UNINST=1'; echo o conf commit)|PERL_MM_USE_DE
 #RUN set -o nounset -o errexit &&  (echo o conf build_cache 100; echo o conf commit)|${CPAN_BIN_PATH} 
 
 
-COPY ./install_cpan.sh ./dependencies.csv ./get_modules_installed.pl ./make_tar_from_source.sh install_cpan.py ${workdir}
+COPY ./install_cpan.sh ./dependencies.csv ./get_modules_installed.pl ./make_tar_from_source.sh install_cpan.py ${WORKDIR}
 
 #RUN  ./install_cpan.sh dependencies.csv && python3 -u  install_cpan.py  -d dependencies.csv
 #RUN  ./install_cpan.sh dependencies.csv
