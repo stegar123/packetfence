@@ -84,6 +84,9 @@ jobs:
   smoke_test:
     runs-on: test-igor2
     needs: ['build_image_and_package']
+    env:
+      container_name: "packetfence_perl_smoke_${{ github.run_id }}_${{ github.run_attempt }}"
+
     permissions:
       contents: read
       packages: write
@@ -110,46 +113,30 @@ jobs:
             packetfence/packetfence-perl-debian-smoke-test:latest
           file: ./addons/packetfence-perl/Dockerfile_smoket_debian
 
-      - name: Generate an unique container name
-        id: packetfence-perl-smoket
-        run: echo "contanier_name=packetfence_perl_smoke_${{ github.run_id }}_${{ github.run_attempt }}" >> "$GITHUB_OUTPUT"
-    
       - name: Start docker container
-        env:
-          container_name: ${{ steps.packetfence-perl-smoket.outputs.contanier_name }}
         run: |
-            docker run -i -d --privileged -v /dev/:/dev/  -v /mnt/debian/packages/:/mnt -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host -p 1443:1443 -v ${{ github.workspace }}/:/root/packetfence --name "${{ container_name }}" packetfence/packetfence-perl-debian-smoke-test:latest
+            docker run -i -d --privileged -v /dev/:/dev/  -v /mnt/debian/packages/:/mnt -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host -p 1443:1443 -v ${{ github.workspace }}/:/root/packetfence --name "$container_name" packetfence/packetfence-perl-debian-smoke-test:latest
 
       - name: Install packetfence
-        env:
-          container_name: ${{ steps.packetfence-perl-smoket.outputs.contanier_name }}
         run: |
-            docker exec -i "${{ container_name }}" apt install packetfence -y
+            docker exec -i "container_name" apt install packetfence -y
 
       - name: Base packetfence configuration
-        env:
-          container_name: ${{ steps.packetfence-perl-smoket.outputs.contanier_name }}
         run: |
-            docker exec -i "${{ container_name }}" ansible-playbook packetfence/addons/packetfence-perl/ansible-configurator/main.yml
+            docker exec -i "container_name" ansible-playbook packetfence/addons/packetfence-perl/ansible-configurator/main.yml
 
       - name: Force install new packetfence-perl packgae
-        env:
-          container_name: ${{ steps.packetfence-perl-smoket.outputs.contanier_name }}
         run: |
-            docker exec -i "${{ container_name }}" find /mnt -name "*.deb"
+            docker exec -i "container_name" find /mnt -name "*.deb"
 
       - name: Copy smoke scipts in the right directory
-        env:
-          container_name: ${{ steps.packetfence-perl-smoket.outputs.contanier_name }}
         run: |
-            docker exec -i "${{ container_name }}" cp -a /root/packetfence/t/* /usr/local/pf/t/
+            docker exec -i "$container_name" cp -a /root/packetfence/t/* /usr/local/pf/t/
 
 #      - name: Post clean docker envrionement
-#        env:
-#          container_name: ${{ steps.packetfence-perl-smoket.outputs.contanier_name }}
 #        if: always()
 #        run: 
-#          docker rm "${{ container_name }}" -f
+#          docker rm $container_name -f
 
 #            docker exec -i packetfence-perl-debian-smoke-test find /mnt -name "*.deb" -exec dpkg -i --force-overwrite {} \;
 
