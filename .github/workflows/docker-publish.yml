@@ -124,12 +124,12 @@ jobs:
       
       - name: Force install new packetfence-perl packgae 
         run: |
-            dpkg -i --force-overwrite /mnt/*.deb
+            sudo dpkg -i --force-overwrite /mnt/*.deb
 
-      - name: Post clean docker envrionement
-        if: always()
-        run: 
-          docker rm packetfence-perl-debian-smoke-test -f
+#      - name: Post clean docker envrionement
+#        if: always()
+#        run: 
+#          docker rm packetfence-perl-debian-smoke-test -f
 
 
 
