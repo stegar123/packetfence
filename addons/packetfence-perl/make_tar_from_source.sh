@@ -4,7 +4,7 @@ set -o nounset -o pipefail -o errexit
 
 #[[  -v "${workdir}" ]] || export workdir="/root"
 #export workdir="/root"
-workdir="${workdir:-/root}"
+workdir="${WORKDIR:-/root}"
 
 #SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 SCRIPT_DIR=/build/packages
