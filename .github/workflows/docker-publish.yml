@@ -121,16 +121,17 @@ jobs:
       - name: Base packetfence configuration
         run: |
             docker exec -i packetfence-perl-debian-smoke-test ansible-playbook ansible-configurator/main.yml
-      
+
       - name: Force install new packetfence-perl packgae 
         run: |
-            sudo dpkg -i --force-overwrite /mnt/*.deb
+            docker exec -i packetfence-perl-debian-smoke-test find /mnt -name "*.deb"
 
 #      - name: Post clean docker envrionement
 #        if: always()
 #        run: 
 #          docker rm packetfence-perl-debian-smoke-test -f
 
+#            docker exec -i packetfence-perl-debian-smoke-test find /mnt -name "*.deb" -exec dpkg -i --force-overwrite {} \;
 
 
   unit-test:
@@ -152,7 +153,7 @@ jobs:
           cat /etc/*release
           env
           ls -la /mnt
-          dpkg -i /mnt/*.deb
+          find /mnt -name "*.deb" -exec dpkg -i {} \;
 
   sign_package:
     needs: ['build_image_and_package', 'unit-test', 'smoke_test']
