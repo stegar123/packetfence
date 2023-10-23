@@ -4,7 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 ARG workdir
 
-WORKDIR ${ workdir }
+WORKDIR ${workdir}
 
 RUN apt-get update && \
     apt-get install -yq systemd systemd-sysv gnupg sudo perl vim wget curl ansible iptables-persistent 
