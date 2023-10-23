@@ -6,7 +6,7 @@ on:
 #      - 'addons/packetfence-perl/**'
       
 jobs:
-  build_image:
+  build_image_and_package:
 #  build:
 
     runs-on: test-igor2
@@ -47,7 +47,7 @@ jobs:
         with:
           images: packetfence-perl-debian
 
-      - name: Build and push
+      - name: Build packetfence-perl docker image
         uses: docker/build-push-action@v5
         with:
           context: './addons/packetfence-perl'
@@ -83,7 +83,7 @@ jobs:
 
   smoke_test:
     runs-on: test-igor2
-    needs: ['build_image']
+    needs: ['build_image_and_package']
     permissions:
       contents: read
       packages: write
@@ -112,7 +112,7 @@ jobs:
 
       - name: Start docker container
         run: |
-            docker run -i -d --privileged -v /dev/:/dev/ -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host -p 1443:1443 -v ${{ github.workspace }}/addons/packetfence-perl/:/root --name  packetfence-perl-debian-smoke-test packetfence/packetfence-perl-debian-smoke-test:latest
+            docker run -i -d --privileged -v /dev/:/dev/  -v /mnt/debian/packages/:/mnt -v /sys/fs/cgroup:/sys/fs/cgroup:rw --cgroupns=host -p 1443:1443 -v ${{ github.workspace }}/addons/packetfence-perl/:/root --name  packetfence-perl-debian-smoke-test packetfence/packetfence-perl-debian-smoke-test:latest
 
       - name: Install packetfence
         run: |
@@ -121,8 +121,12 @@ jobs:
       - name: Base packetfence configuration
         run: |
             docker exec -i packetfence-perl-debian-smoke-test ansible-playbook ansible-configurator/main.yml
+      
+      - name: Force install new packetfence-perl packgae 
+        run: |
+            dpkg -i --force-overwrite /mnt/*.deb
 
-      - name: Clean docker envrionement
+      - name: Post clean docker envrionement
         if: always()
         run: 
           docker rm packetfence-perl-debian-smoke-test -f
@@ -130,7 +134,7 @@ jobs:
 
 
   unit-test:
-    needs: ['build_image']
+    needs: ['build_image_and_package']
     runs-on: test-igor2
     container:
       image: ubuntu:20.04
@@ -143,7 +147,7 @@ jobs:
       - name: Check for dockerenv file
         run: (ls /.dockerenv && echo Found dockerenv) || (echo No dockerenv)
       
-      - name: install the package
+      - name: Install the package packetfence-perl
         run: |
           cat /etc/*release
           env
@@ -151,7 +155,7 @@ jobs:
           dpkg -i /mnt/*.deb
 
   sign_package:
-    needs: ['build_image', 'unit-test', 'smoke_test']
+    needs: ['build_image_and_package', 'unit-test', 'smoke_test']
     runs-on: test-igor2
     container:
       image: debian:11.0
@@ -175,7 +179,7 @@ jobs:
 
 
   push_docker-image_and_deb-package: 
-    needs: ['build_image', 'unit-test', 'sign_package']
+    needs: ['build_image_and_package', 'unit-test', 'sign_package']
     runs-on: test-igor2
 
     steps:
