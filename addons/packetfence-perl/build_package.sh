@@ -1,12 +1,8 @@
 #!/bin/bash
 set -o nounset -o pipefail -o errexit
 
-
-#[[  -v "${workdir}" ]] || export workdir="/root"
-#export workdir="/root"
 workdir="${WORKDIR:-/root}"
 
-#SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 SCRIPT_DIR=/build/packages
 mkdir -p $SCRIPT_DIR
 RPM_BUILD=0
