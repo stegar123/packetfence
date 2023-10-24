@@ -1,9 +1,10 @@
 FROM debian:11
 
-ARG workdir
+ARG workdir \
+    output_directory
 
 ENV WORKDIR=${workdir} \
-    OUTPUT_DIRECTORY="/mnt/output" \
+    OUTPUT_DIRECTORY=${output_directory} \
     BASE_DIR=/usr/local/pf/lib/perl_modules
 
 
