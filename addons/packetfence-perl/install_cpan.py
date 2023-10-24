@@ -107,29 +107,29 @@ def paralle_execution(list_execute,max_iteration):
     with concurrent.futures.ProcessPoolExecutor(max_workers=number_exec) as executor:
         errors_install_perl = []
         list_module_perl_error = []
-        # Start the load operations and mark each future with its URL
-        future_to_url = {executor.submit(install_perl_module, url): url for url in list_execute}
-        for future in concurrent.futures.as_completed(future_to_url):
-            url = future_to_url[future]
-            data = future.result()
-            return_code = data[0]
-            log_file_name = data[1]
+        # Start the load operations for eache entry from CSV file
+        future_to_data = {executor.submit(install_perl_module, data): data for data in list_execute}
+        for future in concurrent.futures.as_completed(future_to_data):
+            data = future_to_data[future]
+            response_data = future.result()
+            return_code = response_data[0]
+            log_file_name = response_data[1]
             if return_code != 0:
-                if url.get('retry_install')  is None:
-                    url['retry_install'] = 1
-                elif url.get('retry_install')  is not None:
-                    url['retry_install'] += 1
-                list_module_perl_error.append(url)
-                error_message = f"Error module installation: {url['a']} --> {url['c']}, more details please see the logs file: {log_file_name}, rc: {return_code} \n"
+                if data.get('retry_install')  is None:
+                    data['retry_install'] = 1
+                elif data.get('retry_install')  is not None:
+                    data['retry_install'] += 1
+                list_module_perl_error.append(data)
+                error_message = f"Error module installation: {data['a']} --> {data['c']}, more details please see the logs file: {log_file_name}, rc: {return_code} \n"
                 print(bcolors.WARNING + error_message + bcolors.ENDC)
                 #show last 15 lines for each error from log file
                 print(bcolors.FAIL + f"ERROR(oputput from log): " + bcolors.ENDC)
                 tail_to_stdout(f"{logs_directory}/{log_file_name}")
-                if url.get('retry_install')  is not None and url['retry_install'] >= 6:
+                if data.get('retry_install')  is not None and data['retry_install'] >= 6:
                     errors_install_perl.append(error_message) 
                 
             else:
-                print(f"{bcolors.OKGREEN} Perl module {url['a']} --> {url['c']} was successfull installed, rc: {return_code} {bcolors.ENDC}\n")
+                print(f"{bcolors.OKGREEN} Perl module {data['a']} --> {data['c']} was successfull installed, rc: {return_code} {bcolors.ENDC}\n")
 
         if len(errors_install_perl) >= 1: 
             errors = "Next errors were found during installation: \n" + '\n'.join(errors_install_perl)
