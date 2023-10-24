@@ -8,7 +8,7 @@ on:
 env:
   WORKDIR: "/root"
   VOLUME_MOUNT: "/mnt"
-  OUTPUT_DIRECTORY: "{env.VOLUME_MOUNT}/output"
+  OUTPUT_DIRECTORY: "/mnt/output"
 
 jobs:
   build_image_and_package:
