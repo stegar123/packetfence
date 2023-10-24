@@ -15,11 +15,6 @@ jobs:
 #  build:
 
     runs-on: test-igor2
-    # services:
-    #   registry:
-    #     image: registry:2
-    #     ports:
-    #       - 5000:5000
     permissions:
       contents: read
       packages: write
@@ -73,13 +68,12 @@ jobs:
       - name: Build debian package
         uses: addnab/docker-run-action@v3
         with:
-#            image: localhost:5000/packetfence/packetfence-perl-debian:latest
             image: packetfence/packetfence-perl-debian:latest
             options: --rm -v ${{ github.workspace }}/addons/packetfence-perl/:${{ env.WORKDIR }} -v ${{ env.VOLUME_MOUNT }}:${{ env.OUTPUT_DIRECTORY }}
             shell: /bin/bash
             run: |
                 set -e && python3 install_cpan.py -d dependencies.csv -vi true && 
-                ./make_tar_from_source.sh
+                ./build_package.sh
 
       - name: Check if the package is created
         run: |
@@ -144,7 +138,7 @@ jobs:
         run: |
             docker exec -i ${{ env.container_name }} find ${{ env.VOLUME_MOUNT }} -name "*.deb" -exec dpkg -i --force-overwrite {} \;
 
-      - name: Execute smoke test after to install new packetgence-perl
+      - name: Execute smoke test after intsllation of the package packetgence-perl
         run: |
             docker exec -i ${{ env.container_name }} cd /usr/local/pf/t/ && ./smoke.t; cd -      
 
@@ -158,11 +152,8 @@ jobs:
     runs-on: test-igor2
     container:
       image: ubuntu:20.04
-#      env:
-#        NODE_ENV: development
       volumes:
         - /mnt/debian/packages/:/mnt
-#      options: --cpus 1
     steps:
       - name: Check for dockerenv file
         run: (ls /.dockerenv && echo Found dockerenv) || (echo No dockerenv)
@@ -179,11 +170,8 @@ jobs:
     runs-on: test-igor2
     container:
       image: debian:11.0
-#      env:
-#        NODE_ENV: development
       volumes:
         - /mnt/debian/packages/:/mnt
-#      options: --cpus 1
     steps:
       - name: Install debian dependenecies
         run:  apt update && apt install gpg dpkg-sig -y

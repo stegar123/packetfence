@@ -53,10 +53,8 @@ RUN (echo o conf make_install_arg 'UNINST=1'; echo o conf commit)|PERL_MM_USE_DE
 #RUN set -o nounset -o errexit &&  (echo o conf build_cache 100; echo o conf commit)|${CPAN_BIN_PATH} 
 
 
-COPY ./install_cpan.sh ./dependencies.csv ./get_modules_installed.pl ./make_tar_from_source.sh install_cpan.py ${WORKDIR}
+COPY ./dependencies.csv ./build_package.sh install_cpan.py ${WORKDIR}
 
-#RUN  ./install_cpan.sh dependencies.csv && python3 -u  install_cpan.py  -d dependencies.csv
-#RUN  ./install_cpan.sh dependencies.csv
 RUN python3 -u  install_cpan.py  -d dependencies.csv -mw 20
 
 #remove logs
