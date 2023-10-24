@@ -152,7 +152,7 @@ jobs:
 #      env:
 #        NODE_ENV: development
       volumes:
-        - ${{ env.VOLUME_MOUNT }}/debian/packages/:${{ env.VOLUME_MOUNT }}
+        - /mnt/debian/packages/:/mnt
 #      options: --cpus 1
     steps:
       - name: Check for dockerenv file
@@ -173,7 +173,7 @@ jobs:
 #      env:
 #        NODE_ENV: development
       volumes:
-        - ${{ env.VOLUME_MOUNT }}/debian/packages/:${{ env.VOLUME_MOUNT }}
+        - /mnt/debian/packages/:/mnt
 #      options: --cpus 1
     steps:
       - name: Install debian dependenecies
