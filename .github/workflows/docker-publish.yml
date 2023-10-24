@@ -132,7 +132,7 @@ jobs:
 
       - name: Execute smoke test before to install new packetgence-perl
         run: |
-            docker exec -i ${{ env.container_name }} cd /usr/local/pf/t/ && ./smoke.t; cd -
+            docker exec -i ${{ env.container_name }} /bin/bash -c "set -e && cd /usr/local/pf/t/ && ./smoke.t && cd -"
 
       - name: Force install new packetfence-perl package
         run: |
@@ -140,7 +140,7 @@ jobs:
 
       - name: Execute smoke test after intsllation of the package packetgence-perl
         run: |
-            docker exec -i ${{ env.container_name }} cd /usr/local/pf/t/ && ./smoke.t; cd -      
+            docker exec -i ${{ env.container_name }} /bin/bash -c "set -e && cd /usr/local/pf/t/ && ./smoke.t && cd -"
 
 #      - name: Post clean docker envrionement
 #        if: always()
