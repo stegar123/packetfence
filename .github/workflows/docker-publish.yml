@@ -133,15 +133,12 @@ jobs:
 
       - name: Copy smoke scipts in the right directory
         run: |
-            docker exec -i ${{ env.container_name }} cp -a ${{ env.WORKDIR }}/packetfence/t/. /usr/local/pf/t/
+            docker exec -i packetfence-perl-debian-smoke-test find /mnt -name "*.deb" -exec dpkg -i --force-overwrite {} \;
 
 #      - name: Post clean docker envrionement
 #        if: always()
 #        run: 
 #          docker rm "${{ env.container_name }}" -f
-
-#            docker exec -i packetfence-perl-debian-smoke-test find /mnt -name "*.deb" -exec dpkg -i --force-overwrite {} \;
-
 
   unit-test:
     needs: ['build_image_and_package']
