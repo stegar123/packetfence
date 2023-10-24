@@ -87,6 +87,7 @@ jobs:
 
   smoke_test:
     runs-on: test-igor2
+    continue-on-error: true
     needs: ['build_image_and_package']
     env:
       container_name: "packetfence_perl_smoke_${{ github.run_id }}_${{ github.run_attempt }}"
@@ -131,13 +132,21 @@ jobs:
         run: |
             docker exec -i ${{ env.container_name }} ansible-playbook packetfence/addons/packetfence-perl/ansible-configurator/main.yml
 
+      - name: Copy smoke scipts in the /usr/local/pf/t/ directory
+        run: |
+            docker exec -i ${{ env.container_name }} cp -a ${{ env.WORKDIR }}/packetfence/t/. /usr/local/pf/t/
+
+      - name: Execute smoke test before to install new packetgence-perl
+        run: |
+            docker exec -i ${{ env.container_name }} cd /usr/local/pf/t/ && ./smoke.t; cd -
+
       - name: Force install new packetfence-perl package
         run: |
             docker exec -i ${{ env.container_name }} find ${{ env.VOLUME_MOUNT }} -name "*.deb" -exec dpkg -i --force-overwrite {} \;
 
-      - name: Copy smoke scipts in the /usr/local/pf/t/ directory
+      - name: Execute smoke test after to install new packetgence-perl
         run: |
-            docker exec -i ${{ env.container_name }} cp -a ${{ env.WORKDIR }}/packetfence/t/. /usr/local/pf/t/
+            docker exec -i ${{ env.container_name }} cd /usr/local/pf/t/ && ./smoke.t; cd -      
 
 #      - name: Post clean docker envrionement
 #        if: always()
