@@ -37,7 +37,7 @@ def convert_csv(csv_filename) -> list:
     with open(csv_filename, 'r') as f:
         for line in csv.reader(f):
             if line != "":
-                list_of_depdencies.append(dict(zip(("a","b","c","d","e","f"), line)))
+                list_of_depdencies.append(dict(zip(("ModName","ModVersion","ModInstall","ModTest","ModNameClean","ModInstallRep"), line)))
     return list_of_depdencies
 
 
@@ -70,15 +70,15 @@ def status_execution(process_ts, data_line):
     while True:
         # Do something else
         return_code = process_ts.poll()
-#        print(f"Waiting for installation module perl: {data_line['a']} --> {data_line['c']} \n")
+#        print(f"Waiting for installation module perl: {data_line['ModName']} --> {data_line['ModInstall']} \n")
         time.sleep(5)
         if return_code is not None:
             # print("***********************")
             # # Process has finished, read rest of the output
             # if return_code != 0:
-            #     print(f"error {data_line['a']}:  {return_code}")
+            #     print(f"error {data_line['ModName']}:  {return_code}")
             #     break
-            # print(f"Perl module {data_line['a']}  was successfull installed, return code: {return_code}")
+            # print(f"Perl module {data_line['ModName']}  was successfull installed, return code: {return_code}")
             # print("***********************")
             break
             
@@ -86,15 +86,15 @@ def status_execution(process_ts, data_line):
 
 
 def install_perl_module(dict_data):
-    file_name = f"logs_{dict_data['a']}.log"
+    file_name = f"logs_{dict_data['ModName']}.log"
     file_log = f"{logs_directory}/{file_name}"
-    if convert_boolean(dict_data['d']) == True:
-        command=f"/usr/bin/cpan install {dict_data['c']}".split()
-    elif convert_boolean(dict_data['d']) == False:
-        command=f"/usr/bin/cpan -T install {dict_data['c']}".split()
-#        command=f"perl -MCPAN -e \"CPAN::Shell->notest('install','{dict_data['c']}')\"".split()
+    if convert_boolean(dict_data['ModTest']) == True:
+        command=f"/usr/bin/cpan install {dict_data['ModInstall']}".split()
+    elif convert_boolean(dict_data['ModTest']) == False:
+        command=f"/usr/bin/cpan -T install {dict_data['ModInstall']}".split()
+#        command=f"perl -MCPAN -e \"CPAN::Shell->notest('install','{dict_data['ModInstall']}')\"".split()
 #    process = subprocess.Popen(command, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    print(f"Installing perl module: {dict_data['a']} \n" )
+    print(f"Installing perl module: {dict_data['ModName']} \n" )
     with open(file_log, 'w') as f:
 #        process = subprocess.Popen(command, stdout=f,stderr=f,text=True)
         process = subprocess.Popen(command, stdout=f,stderr=f,text=True)
@@ -120,7 +120,7 @@ def paralle_execution(list_execute,max_iteration):
                 elif data.get('retry_install')  is not None:
                     data['retry_install'] += 1
                 list_module_perl_error.append(data)
-                error_message = f"Error module installation: {data['a']} --> {data['c']}, more details please see the logs file: {log_file_name}, rc: {return_code} \n"
+                error_message = f"Error module installation: {data['ModName']} --> {data['ModInstall']}, more details please see the logs file: {log_file_name}, rc: {return_code} \n"
                 print(bcolors.WARNING + error_message + bcolors.ENDC)
                 #show last 15 lines for each error from log file
                 print(bcolors.FAIL + f"ERROR(oputput from log): " + bcolors.ENDC)
@@ -129,7 +129,7 @@ def paralle_execution(list_execute,max_iteration):
                     errors_install_perl.append(error_message) 
                 
             else:
-                print(f"{bcolors.OKGREEN} Perl module {data['a']} --> {data['c']} was successfull installed, rc: {return_code} {bcolors.ENDC}\n")
+                print(f"{bcolors.OKGREEN} Perl module {data['ModName']} --> {data['ModInstall']} was successfull installed, rc: {return_code} {bcolors.ENDC}\n")
 
         if len(errors_install_perl) >= 1: 
             errors = "Next errors were found during installation: \n" + '\n'.join(errors_install_perl)
@@ -156,8 +156,7 @@ def find_installed_perl_modules():
         lines = output.strip().split('\n')
         # Split each line into module name and version
         perl_modules = [line.split(',') for line in lines]
-#        return [{"module_name": module[0], "module_version": module[1]} for module in perl_modules]
-        return [{"a": module[0], "b": module[1]} for module in perl_modules]
+        return [{"ModName": module[0], "ModVersion": module[1]} for module in perl_modules]
     except subprocess.CalledProcessError as e:
         print("Error running Perl script:", e)
         return []
@@ -169,21 +168,21 @@ def validate_installed_perl_module(original_list_of_depdencies, installed_perl_m
 
         if name_version_perl not in installed_perl_modules:
             for data_installed in installed_perl_modules:
-                if data_installed['a'].strip().lower() == data_csv['a'].strip().lower() and data_installed['a'] in modules_without_version and data_installed['b'] == '':
-                    print(f"depedencies - {data_csv['a']} {data_csv['b']}; installed - {data_installed['a']} {data_installed['b']}  - {bcolors.OKBLUE} module without version {bcolors.ENDC}")
+                if data_installed['ModName'].strip().lower() == data_csv['ModName'].strip().lower() and data_installed['ModName'] in modules_without_version and data_installed['ModVersion'] == '':
+                    print(f"depedencies - {data_csv['ModName']} {data_csv['ModVersion']}; installed - {data_installed['ModName']} {data_installed['ModVersion']}  - {bcolors.OKBLUE} module without version {bcolors.ENDC}")
                     break
-                elif data_installed['a'].strip().lower() == data_csv['a'].strip().lower() and data_installed['b'].strip().lower() != data_csv['b'].strip().lower():
-                    print(f"depedencies - {data_csv['a']} {data_csv['b']}; installed - {data_installed['a']} {data_installed['b']}  - {bcolors.WARNING}version does not match{bcolors.ENDC}")
+                elif data_installed['ModName'].strip().lower() == data_csv['ModName'].strip().lower() and data_installed['ModVersion'].strip().lower() != data_csv['ModVersion'].strip().lower():
+                    print(f"depedencies - {data_csv['ModName']} {data_csv['ModVersion']}; installed - {data_installed['ModName']} {data_installed['ModVersion']}  - {bcolors.WARNING}version does not match{bcolors.ENDC}")
                     list_module_perl_error_installed.append(data_csv)
                     break
 
             else:
-                print(f"{data_csv['a']} {data_csv['b']} -> {data_csv['c']}  - {bcolors.FAIL}was not installed{bcolors.ENDC}" )
+                print(f"{data_csv['ModName']} {data_csv['ModVersion']} -> {data_csv['ModInstall']}  - {bcolors.FAIL}was not installed{bcolors.ENDC}" )
                 list_module_perl_error_installed.append(data_csv)
                 continue
 
         else:
-            print(f"{data_csv['a']} {data_csv['b']} - {bcolors.OKGREEN}was installed correctly{bcolors.ENDC}")
+            print(f"{data_csv['ModName']} {data_csv['ModVersion']} - {bcolors.OKGREEN}was installed correctly{bcolors.ENDC}")
     return list_module_perl_error_installed
 
 def install_dependencies(list_of_depdencies, max_iteration=6):
@@ -230,6 +229,3 @@ if __name__ == '__main__':
     else:
         install_dependencies(list_of_depdencies)
         validate_dependencies(original_list_of_depdencies,modules_without_version)
-
-
-
