@@ -12,7 +12,6 @@ on:
     paths:
       - 'addons/packetfence-perl/**'
 
-
 env:
   WORKDIR: "/root"
   VOLUME_MOUNT: "/mnt"
@@ -23,6 +22,8 @@ jobs:
 #  build:
 
     runs-on: test-igor2
+    env:
+      container_name: "packetfence_perl_find_version_${{ github.run_id }}_${{ github.run_attempt }}"
     permissions:
       contents: read
       packages: write
@@ -48,12 +49,27 @@ jobs:
 #          registry: ghcr.io
 #          username: ${{ vars.USER_GITHUB }}
 #          password: ${{ secrets.TOKEN_GITHUB }}
-          
+      - name: Find package version from changelog 
+        run: |
+          package_version=$(set -e && docker run --rm -i -v ${{ github.workspace }}/addons/packetfence-perl:${{ env.WORKDIR }}/ debian:11 /bin/bash -c \
+          "set -e && cd ${{ env.WORKDIR }}/ && apt update > /dev/null 2>&1  && apt install build-essential -y > /dev/null 2>&1 && dpkg-parsechangelog --show-field Version")
+          echo "Found version: $package_version"
+          echo "PACKAGE_VERSION=$package_version" >> "$GITHUB_ENV"
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: packetfence-perl-debian
+          images: |
+            packetfence-perl-debian:${{ env.PACKAGE_VERSION }}
+            packetfence-perl-debian:latest
+            localhost/packetfence-perl-debian:latest
+            localhost/packetfence-perl-debian:${{ env.PACKAGE_VERSION }}
+          tags: |
+            type=schedule
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+#           type=ref,event=pr
 
       - name: Build packetfence-perl docker image
         uses: docker/build-push-action@v5
@@ -64,11 +80,8 @@ jobs:
           build-args: |
             workdir=${{ env.WORKDIR }}
             output_directory=${{ env.OUTPUT_DIRECTORY }}
-          tags: |
-            packetfence/packetfence-perl-debian:v1.21
-            packetfence/packetfence-perl-debian:latest
-            localhost:5000/packetfence/packetfence-perl-debian:latest
-            localhost:5000/packetfence/packetfence-perl-debian:v1.21
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           file: ./addons/packetfence-perl/Dockerfile-debian
           cache-from: type=gha
           cache-to: type=gha,mode=max
