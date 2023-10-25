@@ -30,6 +30,8 @@ if [ -f /etc/debian_version ]; then
     cd $SCRIPT_DIR
     dpkg-buildpackage --no-sign -rfakeroot
     mkdir -p /$OUTPUT_DIRECTORY/debian/packages 
+    #remove old packages
+    find /$OUTPUT_DIRECTORY/debian/packages/ -name "packetfence-perl*" -exec ls {} \;
     cp -a ../packetfence-perl* /$OUTPUT_DIRECTORY/debian/packages
     cd -
 fi
