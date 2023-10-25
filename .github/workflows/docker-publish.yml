@@ -1,9 +1,17 @@
 name: packetfence_deb_package
 on:
   push:
-    branches: [ "features/inv-73" ]
-#    paths:
-#      - 'addons/packetfence-perl/**'
+    branches: 
+      - '!devel'   # excludes devel
+    paths:
+      - 'addons/packetfence-perl/**'
+  schedule:
+    - cron: '0 1 * * *'
+  pull_request:
+    branches: [ "devel" ]
+    paths:
+      - 'addons/packetfence-perl/**'
+
 
 env:
   WORKDIR: "/root"
