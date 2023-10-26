@@ -70,9 +70,9 @@ jobs:
             output_directory=${{ env.OUTPUT_DIRECTORY }}
           tags: |
             packetfence-perl-debian:${{ env.PACKAGE_VERSION }}
-            packetfence-perl-debian:latest
-            localhost:5000/packetfence-perl-debian:latest
             localhost:5000/packetfence-perl-debian:${{ env.PACKAGE_VERSION }}
+            ${{ env.BRANCH_NAME == 'devel' && 'packetfence-perl-debian:latest' || ''}}
+            ${{ env.BRANCH_NAME == 'devel' && 'localhost:5000/packetfence-perl-debian:latest' || ''}}
           file: ./addons/packetfence-perl/Dockerfile-debian
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -213,9 +213,14 @@ jobs:
 #        cache-from: type=gha
 ##        cache-to: type=gha,mode=max
 
-    - name: Docker push
+    - name: Publish packetfence-perl image version ${{ needs.build_image_and_package.outputs.package_version }}
       run: |
-        docker push --all-tags localhost:5000/packetfence-perl-debian
+        docker push localhost:5000/packetfence-perl-debian:${{ needs.build_image_and_package.outputs.package_version }} 
+
+    - name: Publish packetfence-image latest
+      if: ${{ env.BRANCH_NAME }} == 'devel'
+      run: |
+        docker push localhost:5000/packetfence-perl-debian:latest
 
 
 
