@@ -27,10 +27,6 @@
   retries: 5
   delay: 10
 
-- name: debug
-  debug:
-    var: get_system_dns_servers.json.dns_servers
-
 - name: configure_mgmt_int
   ansible.builtin.uri:
     url: "{{pfserver_webadmin_url}}/api/v1/configurator/config/interface/{{id[0]}}"

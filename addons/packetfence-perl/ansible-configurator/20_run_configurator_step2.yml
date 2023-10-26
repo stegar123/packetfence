@@ -222,9 +222,6 @@
   delay: 10
   ignore_errors: True
   
-- debug:
-    var: result_admin_password
-
 - name: restart database
   ansible.builtin.uri:
     url: "{{pfserver_webadmin_url}}/api/v1/configurator/system_service/packetfence-mariadb/restart"

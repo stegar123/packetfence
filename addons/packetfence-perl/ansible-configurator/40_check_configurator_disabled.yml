@@ -17,6 +17,3 @@
   ignore_errors: true
   retries: 5
   delay: 10
-
-- debug:
-    var: result

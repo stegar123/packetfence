@@ -1,4 +1,4 @@
-name: packetfence_deb_package
+name: packetfence_perl_deb_package
 on:
   push:
     branches: 
@@ -20,8 +20,6 @@ env:
 
 jobs:
   build_image_and_package:
-#  build:
-
     runs-on: test-igor2
     permissions:
       contents: read
@@ -44,12 +42,6 @@ jobs:
         with:
           driver-opts: network=host
 
-#      - name: Login to GitHub Container Registry
-#        uses: docker/login-action@v3
-#        with:
-#          registry: ghcr.io
-#          username: ${{ vars.USER_GITHUB }}
-#          password: ${{ secrets.TOKEN_GITHUB }}
       - name: Find package version from changelog
         id: contents
         run: |
@@ -69,11 +61,11 @@ jobs:
             workdir=${{ env.WORKDIR }}
             output_directory=${{ env.OUTPUT_DIRECTORY }}
           tags: |
-            packetfence-perl-debian:${{ env.PACKAGE_VERSION }}
-            localhost:5000/packetfence-perl-debian:${{ env.PACKAGE_VERSION }}
-            ${{ env.BRANCH_NAME == 'devel' && 'packetfence-perl-debian:latest' || ''}}
-            ${{ env.BRANCH_NAME == 'devel' && 'localhost:5000/packetfence-perl-debian:latest' || ''}}
-          file: ./addons/packetfence-perl/Dockerfile-debian
+            packetfence/packetfence-perl-debian:${{ env.PACKAGE_VERSION }}
+            ghcr.io/packetfence/packetfence-perl-debian:${{ env.PACKAGE_VERSION }}
+            ${{ env.BRANCH_NAME == 'devel' && 'packetfence/packetfence-perl-debian:latest' || ''}}
+            ${{ env.BRANCH_NAME == 'devel' && 'ghcr.io/packetfence/packetfence-perl-debian:latest' || ''}}
+          file: ./addons/packetfence-perl/Dockerfile_debian
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -150,10 +142,10 @@ jobs:
         run: |
             docker exec -i ${{ env.container_name }} /bin/bash -c "set -e && cd /usr/local/pf/t/ && mysql < db/smoke_test.sql && ./smoke.t; cd -"
 
-#      - name: Post clean docker envrionement
-#        if: always()
-#        run: 
-#          docker rm "${{ env.container_name }}" -f
+      - name: Post clean docker envrionement
+        if: always()
+        run: 
+          docker rm "${{ env.container_name }}" -f
 
   unit-test:
     needs: ['build_image_and_package']
@@ -213,19 +205,19 @@ jobs:
 #        cache-from: type=gha
 ##        cache-to: type=gha,mode=max
 
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ vars.USER_GITHUB }}
+        password: ${{ secrets.TOKEN_GITHUB }}
+
     - name: Publish packetfence-perl-debian image version ${{ needs.build_image_and_package.outputs.package_version }}
       run: |
-        docker push localhost:5000/packetfence-perl-debian:${{ needs.build_image_and_package.outputs.package_version }} 
+        docker push ghcr.io/packetfence/packetfence-perl-debian:${{ needs.build_image_and_package.outputs.package_version }} 
 
     - name: Publish packetfence-image-debian latest
       if: env.BRANCH_NAME == 'devel'
       run: |
-        docker push localhost:5000/packetfence-perl-debian:latest
+        docker push ghcr.io/packetfence/packetfence-perl-debian:latest
 
-
-
-#        docker push --all-tags localhost:5000/packetfence-perl-debian:${{ needs.build_image_and_package.outputs.package_version }} 
-
-    - name: Inspect
-      run: |
-        docker buildx imagetools inspect localhost:5000/packetfence-perl-debian:${{ needs.build_image_and_package.outputs.package_version }} 

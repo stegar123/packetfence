@@ -108,10 +108,7 @@
     validate_certs: False
     return_content: yes
   register: result_pf_status
-#  until: result_pf_status.status in [200] and "Service is running" in result_pf_status.json.message
   ignore_errors: yes
-#  retries: 5
-#  delay: 10
 
 - name: config database
   ansible.builtin.uri:
