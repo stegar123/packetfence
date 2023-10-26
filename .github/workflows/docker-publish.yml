@@ -16,6 +16,7 @@ env:
   WORKDIR: "/root"
   VOLUME_MOUNT: "/mnt"
   OUTPUT_DIRECTORY: "/mnt/output"
+  BRANCH_NAME: ${{ github.head_ref || github.ref_name }} 
 
 jobs:
   build_image_and_package:
@@ -222,4 +223,4 @@ jobs:
 
     - name: Inspect
       run: |
-        docker buildx imagetools inspect localhost:5000/packetfence/packetfence-perl-debian:latest
+        docker buildx imagetools inspect localhost:5000/packetfence-perl-debian:${{ needs.build_image_and_package.outputs.package_version }} 
