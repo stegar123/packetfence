@@ -72,7 +72,7 @@ jobs:
       - name: Build debian package
         uses: addnab/docker-run-action@v3
         with:
-            image: packetfence-perl-debian:${{ env.PACKAGE_VERSION }}
+            image: packetfence/packetfence-perl-debian:${{ env.PACKAGE_VERSION }}
             options: --rm -v ${{ github.workspace }}/addons/packetfence-perl/:${{ env.WORKDIR }} -v ${{ env.VOLUME_MOUNT }}:${{ env.OUTPUT_DIRECTORY }}
             shell: /bin/bash
             run: |
