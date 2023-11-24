@@ -56,6 +56,4 @@ jobs:
       - name: Clean directory
         if: always()
         run: |
-          ls -la ${{ inputs._VOLUME_MOUNT }}/addons/perl-client/result/
           rm -rf ${{ inputs._VOLUME_MOUNT }}/addons/perl-client/result/
-          ls -la ${{ inputs._VOLUME_MOUNT }}/addons/perl-client/
