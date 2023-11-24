@@ -47,4 +47,4 @@ jobs:
       - name: Clean directory
         if: always()
         run: |
-          rm -rf ${{ inputs._WORKDIR }}/packetfence/addons/perl-client/result/
+          rm -rf ${{ inputs._WORKDIR }}/addons/perl-client/result/
