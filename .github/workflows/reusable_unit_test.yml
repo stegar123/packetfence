@@ -28,7 +28,7 @@ jobs:
           ls -la /mnt
           ${{ inputs._IMAGE_TYPE == 'rhel8' && env.INSTALL_RPM_PACKAGE  || env.INSTALL_DEB_PACKAGE }}
         env:
-          INSTALL_RPM_PACKAGE: "set -x && yum -y install findutils && find /mnt -name ${{ inputs._PACKAGE_NAME }}*.rpm -exec rpm -ivh {} \\;"
-          INSTALL_DEB_PACKAGE: "set -x && find /mnt -name ${{ inputs._PACKAGE_NAME }}*.deb -exec dpkg -i {} \\;"
+          INSTALL_RPM_PACKAGE: "set -e && yum -y install findutils && find /mnt -name ${{ inputs._PACKAGE_NAME }}*.rpm -exec rpm -ivh {} \\;"
+          INSTALL_DEB_PACKAGE: "set -e && find /mnt -name ${{ inputs._PACKAGE_NAME }}*.deb -exec  bash -c  'dpkg -i {}  &&  apt-get -f install' \\;"
           
 
