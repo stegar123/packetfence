@@ -71,7 +71,7 @@ jobs:
     strategy:
       matrix:
 #        images: ['debian', 'rhel8']
-        images: ['rhel8']
+        images: ['debian']
     uses:  ./.github/workflows/perl-client_build_package.yml
     needs: ['build_preparation']
     with:
