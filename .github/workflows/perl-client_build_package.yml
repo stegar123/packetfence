@@ -29,16 +29,16 @@ jobs:
       - name: Build package ${{inputs._IMAGE_TYPE}}
         shell: sh
         run: |
-          set -e && export FINGERBANK_API_KEY=$(set -e && python3  ${{ inputs._WORKDIR }}/addons/packetfence-perl/psono.py --api_key_id=${{ secrets.PSONO_API_KEY_ID }} --api_key_secret_key=${{ secrets.PSONO_API_KEY_SECRET_KEY }} --secret_id=${{ vars.PSONO_BUILDS_KEY_FINGERBANK }} --return_value=password)
-          cd ${{ inputs._WORKDIR }}/addons/perl-client/
+          set -e && export FINGERBANK_API_KEY=$(set -e && python3  ${{ inputs._WORKDIR }}/packetfence/addons/packetfence-perl/psono.py --api_key_id=${{ secrets.PSONO_API_KEY_ID }} --api_key_secret_key=${{ secrets.PSONO_API_KEY_SECRET_KEY }} --secret_id=${{ vars.PSONO_BUILDS_KEY_FINGERBANK }} --return_value=password)
+          cd ${{ inputs._WORKDIR }}/packetfence/addons/perl-client/
           set -e &&  make SHELL='sh' -e ${{ inputs._IMAGE_TYPE == 'rhel8' && 'build_rpm' || 'build_deb'}}
-          ls -la ${{ inputs._WORKDIR }}/packetfence/addons/perl-client/result/${{ inputs._IMAGE_TYPE == 'rhel8' && 'centos/8' || 'debian/bullseye'}}
+          ls -la ${{ inputs._WORKDIR }}/addons/perl-client/result/${{ inputs._IMAGE_TYPE == 'rhel8' && 'centos/8' || 'debian/bullseye'}}
     
       - name: Upload the package to artifactory ${{inputs._IMAGE_TYPE}}
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.ARTIFACTORY_NAME }}
-          path:  ${{ inputs._WORKDIR }}/packetfence/addons/perl-client/result/${{ inputs._IMAGE_TYPE == 'rhel8' && 'centos/8' || 'debian/bullseye'}}/${{ env.PACKAGE_NAME }}
+          path:  ${{ inputs._WORKDIR }}/addons/perl-client/result/${{ inputs._IMAGE_TYPE == 'rhel8' && 'centos/8' || 'debian/bullseye'}}/${{ env.PACKAGE_NAME }}
         env:
           PACKAGE_NAME: ${{ inputs._IMAGE_TYPE == 'rhel8' &&  'fingerbank-*.noarch.rpm' || 'fingerbank*.deb' }}
           ARTIFACTORY_NAME: ${{ inputs._IMAGE_TYPE == 'rhel8' &&  'package-rpm' || 'package-deb' }}
