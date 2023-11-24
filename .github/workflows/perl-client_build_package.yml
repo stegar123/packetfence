@@ -13,7 +13,7 @@ jobs:
   build_package:
     runs-on: packetfence-perl-package-build
     container:
-      image: registry.gitlab.com/orange-opensource/gitlab-buildpkg/${{ inputs._IMAGE_TYPE == 'rhel8' && 'centos:8' || 'debian:11.0'}}
+      image: registry.gitlab.com/orange-opensource/gitlab-buildpkg/${{ inputs._IMAGE_TYPE == 'rhel8' && 'centos:8' || 'debian:bullseye'}}
       volumes:
         - ${{ github.workspace }}/:${{ inputs._WORKDIR }}
     steps:     

@@ -66,10 +66,8 @@ jobs:
           echo "branch_name=${{env.BRANCH_NAME}}" >> "$GITHUB_OUTPUT"
           echo "package_name=${{env.PACKAGE_NAME}}" >> "$GITHUB_OUTPUT"
 
-
-
   build_packages:
-    if: ${{ contains( github.event.head_commit.message, '[perl]') || needs.build_preparation.outputs.path_changes == 'true' && needs.build_preparation.outputs.regex_match_branch != '' }}
+    if: ${{ contains( github.event.head_commit.message, '[perl-test]') || needs.build_preparation.outputs.path_changes == 'true' && needs.build_preparation.outputs.regex_match_branch != '' }}
     strategy:
       matrix:
         images: ['debian', 'rhel8']
