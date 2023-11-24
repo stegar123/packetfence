@@ -43,10 +43,10 @@ jobs:
           base: ${{ github.ref }}
           filters: |
             src:
-              - 'addons/perl-client/**'
-              - '.github/workflows/main_packetfence-perl.yml'
+              - '.addons/perl-client/**'
+              - '.github/workflows/main_perl-client.yml'
+              - '.github/workflows/perl-client_build_package.yml'
               - '.github/workflows/reusable_sign_package_debian.yml'
-
               - '.github/workflows/reusable_sign_package_rhel8.yml'
               - '.github/workflows/reusable_upload_packages.yml'
       - run:  | 
