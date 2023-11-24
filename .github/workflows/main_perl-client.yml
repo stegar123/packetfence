@@ -77,6 +77,8 @@ jobs:
     with:
       _IMAGE_TYPE: ${{ matrix.images }}
       _WORKDIR:  ${{needs.build_preparation.outputs.workdir}}
+      _BRANCH_NAME: ${{ needs.build_preparation.outputs.branch_name }}
+
     secrets: inherit
   
   unit_tests_packages:
