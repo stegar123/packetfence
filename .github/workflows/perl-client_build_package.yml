@@ -11,6 +11,9 @@ on:
       _BRANCH_NAME:
         required: True
         type: string
+      _VOLUME_MOUNT:
+        required: True
+        type: string
 
 jobs:
   build_package:
@@ -18,7 +21,7 @@ jobs:
     container:
       image: registry.gitlab.com/orange-opensource/gitlab-buildpkg/${{ inputs._IMAGE_TYPE == 'rhel8' && 'centos:8' || 'debian:bullseye'}}
       volumes:
-        - ${{ github.workspace }}/:${{ inputs._WORKDIR }}
+        - ${{ github.workspace }}/:${{ inputs._VOLUME_MOUNT }}
     steps:
 
       - name: Install RHEL dependencies ${{ inputs._IMAGE_TYPE }}
@@ -32,11 +35,11 @@ jobs:
       - name: Build package ${{inputs._IMAGE_TYPE}}
         shell: sh
         run: |
-          ls -la  ${{ inputs._WORKDIR }}
-          set -e && export FINGERBANK_API_KEY=$(set -e && python3  ${{ inputs._WORKDIR }}/addons/packetfence-perl/psono.py --api_key_id=${{ secrets.PSONO_API_KEY_ID }} --api_key_secret_key=${{ secrets.PSONO_API_KEY_SECRET_KEY }} --secret_id=${{ vars.PSONO_BUILDS_KEY_FINGERBANK }} --return_value=password)
-          cd ${{ inputs._WORKDIR }}/addons/perl-client/
+          ls -la  ${{ inputs._VOLUME_MOUNT }}
+          set -e && export FINGERBANK_API_KEY=$(set -e && python3  ${{ inputs._VOLUME_MOUNT }}/addons/packetfence-perl/psono.py --api_key_id=${{ secrets.PSONO_API_KEY_ID }} --api_key_secret_key=${{ secrets.PSONO_API_KEY_SECRET_KEY }} --secret_id=${{ vars.PSONO_BUILDS_KEY_FINGERBANK }} --return_value=password)
+          cd ${{ inputs._VOLUME_MOUNT }}/addons/perl-client/
           set -e &&  make SHELL='sh' -e ${{ inputs._IMAGE_TYPE == 'rhel8' && 'build_rpm' || 'build_deb'}}
-          ls -la ${{ inputs._WORKDIR }}/addons/perl-client/result/${{ inputs._IMAGE_TYPE == 'rhel8' && 'centos/8' || 'debian/bullseye'}}
+          ls -la ${{ inputs._VOLUME_MOUNT }}/addons/perl-client/result/${{ inputs._IMAGE_TYPE == 'rhel8' && 'centos/8' || 'debian/bullseye'}}
         env:
           CI_COMMIT_REF_NAME: ${{ inputs._BRANCH_NAME }}
     
@@ -44,7 +47,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: ${{ env.ARTIFACTORY_NAME }}
-          path:  ${{ inputs._WORKDIR }}/addons/perl-client/result/${{ inputs._IMAGE_TYPE == 'rhel8' && 'centos/8' || 'debian/bullseye'}}/${{ env.PACKAGE_NAME }}
+          path:  ${{ inputs._VOLUME_MOUNT }}/addons/perl-client/result/${{ inputs._IMAGE_TYPE == 'rhel8' && 'centos/8' || 'debian/bullseye'}}/${{ env.PACKAGE_NAME }}
         env:
           PACKAGE_NAME: ${{ inputs._IMAGE_TYPE == 'rhel8' &&  'fingerbank-*.noarch.rpm' || 'fingerbank*.deb' }}
           ARTIFACTORY_NAME: ${{ inputs._IMAGE_TYPE == 'rhel8' &&  'package-rpm' || 'package-deb' }}
@@ -52,6 +55,6 @@ jobs:
       - name: Clean directory
         if: always()
         run: |
-          ls -la ${{ inputs._WORKDIR }}/addons/perl-client/result/
-          rm -rf ${{ inputs._WORKDIR }}/addons/perl-client/result/
-          ls -la ${{ inputs._WORKDIR }}/addons/perl-client/
+          ls -la ${{ inputs._VOLUME_MOUNT }}/addons/perl-client/result/
+          rm -rf ${{ inputs._VOLUME_MOUNT }}/addons/perl-client/result/
+          ls -la ${{ inputs._VOLUME_MOUNT }}/addons/perl-client/

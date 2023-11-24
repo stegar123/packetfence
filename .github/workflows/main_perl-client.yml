@@ -78,6 +78,7 @@ jobs:
       _IMAGE_TYPE: ${{ matrix.images }}
       _WORKDIR:  ${{needs.build_preparation.outputs.workdir}}
       _BRANCH_NAME: ${{ needs.build_preparation.outputs.branch_name }}
+      _VOLUME_MOUNT: ${{needs.build_preparation.outputs.volume_mount}}
 
     secrets: inherit
   
