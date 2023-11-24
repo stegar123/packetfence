@@ -36,6 +36,7 @@ jobs:
         shell: sh
         run: |
           ls -la  ${{ inputs._VOLUME_MOUNT }}
+          git config --global --add safe.directory  ${{ inputs._VOLUME_MOUNT }}
           set -e && export FINGERBANK_API_KEY=$(set -e && python3  ${{ inputs._VOLUME_MOUNT }}/addons/packetfence-perl/psono.py --api_key_id=${{ secrets.PSONO_API_KEY_ID }} --api_key_secret_key=${{ secrets.PSONO_API_KEY_SECRET_KEY }} --secret_id=${{ vars.PSONO_BUILDS_KEY_FINGERBANK }} --return_value=password)
           cd ${{ inputs._VOLUME_MOUNT }}/addons/perl-client/
           set -e &&  make SHELL='sh' -e ${{ inputs._IMAGE_TYPE == 'rhel8' && 'build_rpm' || 'build_deb'}}
