@@ -19,14 +19,19 @@ jobs:
     steps:     
 
       - name: Install RHEL dependencies ${{ inputs._IMAGE_TYPE }}
+        if: inputs._IMAGE_TYPE == 'rhel8'
         run: dnf -y install rpm-sign python39 && python3.9 -m pip install -q  -U pip && pip install -q pynacl requests
+
+      - name: Install Debian dependencies ${{ inputs._IMAGE_TYPE }}
+        if: inputs._IMAGE_TYPE == 'debian'
+        run:  apt -qq update && apt -qq -y install python3 python3-pip && python3 -m pip install -q  -U pip && pip install -q pynacl requests
 
       - name: Build package ${{inputs._IMAGE_TYPE}}
         shell: sh
         run: |
           set -e && export FINGERBANK_API_KEY=$(set -e && python3  ${{ inputs._WORKDIR }}/addons/packetfence-perl/psono.py --api_key_id=${{ secrets.PSONO_API_KEY_ID }} --api_key_secret_key=${{ secrets.PSONO_API_KEY_SECRET_KEY }} --secret_id=${{ vars.PSONO_BUILDS_KEY_FINGERBANK }} --return_value=password)
           cd ${{ inputs._WORKDIR }}/addons/perl-client/
-          set -e &&  make SHELL='sh' -e ${{ inputs._IMAGE_TYPE == 'rhel8' && 'build_rpm' || 'debian:11.0'}}
+          set -e &&  make SHELL='sh' -e ${{ inputs._IMAGE_TYPE == 'rhel8' && 'build_rpm' || 'build_deb'}}
           ls -la ${{ inputs._WORKDIR }}/packetfence/addons/perl-client/result/${{ inputs._IMAGE_TYPE == 'rhel8' && 'centos/8' || 'debian/bullseye'}}
     
       - name: Upload the package to artifactory ${{inputs._IMAGE_TYPE}}
@@ -37,3 +42,8 @@ jobs:
         env:
           PACKAGE_NAME: ${{ inputs._IMAGE_TYPE == 'rhel8' &&  'fingerbank-*.noarch.rpm' || 'fingerbank*.deb' }}
           ARTIFACTORY_NAME: ${{ inputs._IMAGE_TYPE == 'rhel8' &&  'package-rpm' || 'package-deb' }}
+
+      - name: Clean directory
+        if: always()
+        run: |
+          rm -rf ${{ inputs._WORKDIR }}/packetfence/addons/perl-client/result/
