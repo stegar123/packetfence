@@ -20,7 +20,7 @@ jobs:
   upload-package: 
     runs-on: packetfence-perl-package-build
     env:
-      PACKAGE_DEST_PATH: "~/packages/packetfence-perl/${{ inputs._BRANCH_NAME }}/${{ inputs._IMAGE_TYPE }}/"
+      PACKAGE_DEST_PATH: "~/packages/${{ inputs._PACKAGE_NAME }}/${{ inputs._BRANCH_NAME }}/${{ inputs._IMAGE_TYPE }}/"
     container:
       image: debian:11.0
       volumes:
