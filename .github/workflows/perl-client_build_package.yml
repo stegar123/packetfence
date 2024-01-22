@@ -16,15 +16,15 @@ on:
         type: string
 
 jobs:
-  git_checkout:
-    runs-on: package-build
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+#  git_checkout:
+#    runs-on: package-build
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v3
 
   build_package:
     runs-on: package-build
-    needs: git_checkout
+#    needs: git_checkout
     container:
       image: registry.gitlab.com/orange-opensource/gitlab-buildpkg/${{ inputs._IMAGE_TYPE == 'rhel8' && 'centos:8' || 'debian:bullseye'}}
       env:
@@ -32,6 +32,9 @@ jobs:
 #      volumes:
 #        - ${{ github.workspace }}/:${{ inputs._VOLUME_MOUNT }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Copy 
         run: |
           cp -avT ${GITHUB_WORKSPACE} ${EXECUTION_DIRECTORY}

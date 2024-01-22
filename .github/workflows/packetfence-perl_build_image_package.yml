@@ -88,12 +88,17 @@ jobs:
       credentials:
         username: ${{ vars.USER_GITHUB }}
         password: ${{ secrets.TOKEN_GITHUB }}
-      volumes:
-        - ${{ github.workspace }}/addons/packetfence-perl/:${{ inputs._WORKDIR  }}
+#      volumes:
+#        - ${{ github.workspace }}/addons/packetfence-perl/:${{ inputs._WORKDIR  }}
     steps:     
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
       - name: Build package ${{inputs._IMAGE_TYPE}}
         run: |
-          cd /root
+
+          ls -la /__w/packetfence/packetfence
+          cd /__w/packetfence/packetfence/addons/packetfence-perl/
           set -e && python3 install_cpan.py -d dependencies.csv -vi true && ./build_package.sh
           ls -la ${{ inputs._OUTPUT_DIRECTORY }}/${{inputs._IMAGE_TYPE}}/packages/
     

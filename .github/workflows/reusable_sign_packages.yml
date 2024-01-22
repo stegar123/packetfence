@@ -25,6 +25,9 @@ jobs:
       volumes:
         - ${{ github.workspace }}/addons/packetfence-perl/:/root
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3  
+
       - name: Download artifactory ${{ inputs._IMAGE_TYPE }}
         uses: actions/download-artifact@v3
         with:
@@ -38,7 +41,9 @@ jobs:
 
       - name: Import private key ${{ inputs._IMAGE_TYPE }}
         run: | 
-          set -e && python3 /root/psono.py --api_key_id=${{ secrets.PSONO_API_KEY_ID }} --api_key_secret_key=${{ secrets.PSONO_API_KEY_SECRET_KEY }} --secret_id=${{ vars.PSONO_GPG_PRIVATE_KEY_SECRET_ID }} --return_value=password_notes | gpg --pinentry-mode loopback --import
+          cd /__w/packetfence/packetfence/addons/packetfence-perl/
+          set -e && python3 psono.py --api_key_id=${{ secrets.PSONO_API_KEY_ID }} --api_key_secret_key=${{ secrets.PSONO_API_KEY_SECRET_KEY }} --secret_id=${{ vars.PSONO_GPG_PRIVATE_KEY_SECRET_ID }} --return_value=password_notes | gpg --pinentry-mode loopback --import
+#          set -e && python3 /root/psono.py --api_key_id=${{ secrets.PSONO_API_KEY_ID }} --api_key_secret_key=${{ secrets.PSONO_API_KEY_SECRET_KEY }} --secret_id=${{ vars.PSONO_GPG_PRIVATE_KEY_SECRET_ID }} --return_value=password_notes | gpg --pinentry-mode loopback --import
 
       - name: Sign the package ${{ inputs._IMAGE_TYPE }}
         run: dpkg-sig -k  B022C48D3D6373D7FC256A8CCB2D3A2AA0030E2C  --sign builder /mnt/${{ inputs._PACKAGE_NAME }}*.deb
@@ -67,6 +72,9 @@ jobs:
       volumes:
         - ${{ github.workspace }}/addons/packetfence-perl/:/root
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3  
+
       - name: Download artifactory ${{ inputs._IMAGE_TYPE }}
         uses: actions/download-artifact@v3 
         with:
@@ -80,7 +88,9 @@ jobs:
 
       - name: Import private key ${{ inputs._IMAGE_TYPE }}
         run: |
-          set -e && python3 /root/psono.py --api_key_id=${{ secrets.PSONO_API_KEY_ID }} --api_key_secret_key=${{ secrets.PSONO_API_KEY_SECRET_KEY }} --secret_id=${{ vars.PSONO_GPG_PRIVATE_KEY_SECRET_ID }} --return_value=password_notes | gpg --pinentry-mode loopback --import
+          cd /__w/packetfence/packetfence/addons/packetfence-perl/
+          set -e && python3 psono.py --api_key_id=${{ secrets.PSONO_API_KEY_ID }} --api_key_secret_key=${{ secrets.PSONO_API_KEY_SECRET_KEY }} --secret_id=${{ vars.PSONO_GPG_PRIVATE_KEY_SECRET_ID }} --return_value=password_notes | gpg --pinentry-mode loopback --import
+#          set -e && python3 /root/psono.py --api_key_id=${{ secrets.PSONO_API_KEY_ID }} --api_key_secret_key=${{ secrets.PSONO_API_KEY_SECRET_KEY }} --secret_id=${{ vars.PSONO_GPG_PRIVATE_KEY_SECRET_ID }} --return_value=password_notes | gpg --pinentry-mode loopback --import
 
       - name: Check if the key was imported ${{ inputs._IMAGE_TYPE }}
         run: |
